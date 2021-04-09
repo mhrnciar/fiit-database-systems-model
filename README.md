@@ -86,7 +86,7 @@ deleted_at TIMESTAMP
 Pomocou LTREE vznikne stromová štruktúra schopností danej role.
 Do requirement_id sa vloží buď 'root' alebo 'root[.id]*' podľa toho, ako hlboko v strome sa daná schopnosť nachádza.
 Query je možné spraviť ako `SELECT * FROM role_abilities WHERE requirement_id <@ 'root.1’;` ak chcem vypísať potomkov schopnosti s id = 1.
-Predtým je potrebné vytvoriť extension pomocou ‘CREATE EXTENSION ltree’ a vytvoriť index pomocou `CREATE INDEX role_abilities_index ON role_abilities USING GIST (requirement_id);`
+Predtým je potrebné vytvoriť extension pomocou `CREATE EXTENSION ltree` a vytvoriť index pomocou `CREATE INDEX role_abilities_index ON role_abilities USING GIST (requirement_id);`
 
 
 **relationships**
