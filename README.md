@@ -198,13 +198,13 @@ description TEXT(500) NOT NULL,
 min_level INT NOT NULL,
 requirement_moster INT FOREIGN KEY (combat_log),
 requirement_moster INT FOREIGN KEY (history_log),
-location INT[][] NOT NULL FOREIGN KEY (terrain),
+location INT[][] NOT NULL,
 created_at TIMESTAMP NOT NULL,
 updated_at TIMESTAMP NOT NULL,
 deleted_at TIMESTAMP
 ```
 
-Každý záznam tabuľky predstavuje dvojrozmernú maticu mapy, jej názov a popis spolu s minimálnym levelom, ktorý musí postava mať, aby mohla danú mapu navštíviť. Taktiež sa môže dopytovať combat_logu a history_logu, či bola splnená podmienka vstupu na ďalšiu mapu: či bola zabitá konkrétna príšera alebo bola splnená úloha. Každé políčko v matici predstavuje id terénu, ktorý je uložený v tabuľke **terrain**, či ide o trávu, strom, budovu a pod.
+Každý záznam tabuľky predstavuje dvojrozmernú maticu mapy, jej názov a popis spolu s minimálnym levelom, ktorý musí postava mať, aby mohla danú mapu navštíviť. Taktiež sa môže dopytovať combat_logu a history_logu, či bola splnená podmienka vstupu na ďalšiu mapu: či bola zabitá konkrétna príšera alebo bola splnená úloha. Každé políčko v matici predstavuje id terénu, ktorý je uložený v tabuľke **terrain**, či ide o trávu, strom, budovu a pod. ale keďže pole nemôže referencovať jednotlivé id, nemôže sa vytvoriť prepojenie s cudzím kľúčom.
 
 **terrain**
 
