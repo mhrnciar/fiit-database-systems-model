@@ -45,6 +45,42 @@ deleted_at TIMESTAMP
 
 Jeden záznam v tabuľke **characters** predstavuje jednu postavu používateľa. Používateľ môže vlastniť viacero postáv a komu patrí sa identifikuje pomocou user_id. Každá postava má nejakú rolu z tabuľky **roles**, ktorá ovplyvňuje počiatočné atribúty postavy a jej schopnosti, taktiež aj ich zmenu pri získaní nového levelu. Postava sa nachádza na mape, pričom sa nachádza na určitých koordinátoch (location_x, location_y, location_z). Poloha postavy sa neupdatuje stále, pretože by to príliš zaťažovalo databázu, namiesto toho by sa poloha ukladala do cache a v pravidelných intervaloch tabuľku updatovala. Balance predstavuje obnos peňazí, ktoré postava vlastní. Exp predstavuje získané body skúseností, ktoré sú potrebné na dosiahnutie ďalších levelov. 
 
+**items**
+
+```sql
+id serial PRIMARY KEY,
+name VARCHAR(45) NOT NULL,
+description TEXT(500) NOT NULL,
+value INT,
+hp_modifier INT,
+mp_modifier INT,
+speed_modifier INT,
+armor_modifier INT,
+attack_modifier INT,
+level_min INT NOT NULL,
+location_x INT NOT NULL,
+location_y INT NOT NULL,
+created_at TIMESTAMP NOT NULL,
+updated_at TIMESTAMP NOT NULL,
+deleted_at TIMESTAMP
+```
+
+V tabuľke **items** sa nachádzajú predmety, ktoré môžu byť využiteľné v hre. Každý predmet má svoju cenu a taktiež sa môže nachádzať na mape na určitých koorinátoch. Každý predmet pridáva alebo odoberá atribúty hráčovi, ktorý predmet využíva a tieto hodnoty sú tvorené náhodne. Taktiež na to, aby hráč mohol predmet využívať, musí mať dostatočný level postavy.
+
+**inventory**
+
+```sql
+id serial PRIMARY KEY,
+character_id INT FOREIGN KEY(characters),
+item_id INT FOREIGN KEY(items),
+count INT,
+created_at TIMESTAMP NOT NULL,
+updated_at TIMESTAMP NOT NULL,
+deleted_at TIMESTAMP
+```
+
+Tabuľka **inventory** obsahuje záznamy o všetkých predmetoch, ktoré hráč vlastní a taktiež aj počte konkrétneho predmetu.
+
 
 **roles**
 
@@ -171,7 +207,59 @@ deleted_at TIMESTAMP
 Každý záznam tabuľky predstavuje dvojrozmernú maticu mapy, jej názov a popis spolu s minimálnym levelom, ktorý musí postava mať, aby mohla danú mapu navštíviť. Taktiež sa môže dopytovať combat_logu a history_logu, či bola splnená podmienka vstupu na ďalšiu mapu: či bola zabitá konkrétna príšera alebo bola splnená úloha. Každé políčko v matici predstavuje id terénu, ktorý je uložený v tabuľke **terrain**, či ide o trávu, strom, budovu a pod.
 
 
-**chat:**
+**npcs**
+
+```sql
+id serial PRIMARY KEY,
+name VARCHAR(45) UNIQUE NOT NULL,
+location_id INT FOREIGN KEY(map),
+location_x INT,
+location_y INT,
+location_z INT,
+created_at TIMESTAMP NOT NULL,
+updated_at TIMESTAMP NOT NULL,
+deleted_at TIMESTAMP
+```
+
+Tabuľka **npcs** predstavuje počítačom ovládanú entitu, ktorá bude hráčom prideľovať questy a za ne itemy. Jednotlivé npcs sa nadzádzajú na mape (location_id) a na určitých koordinátoch mapy.
+
+**monsters**
+
+```sql
+id serial PRIMARY KEY,
+type_id INT FOREIGN KEY(monster_type),
+hp INT NOT NULL,
+mp INT NOT NULL,
+speed INT NOT NULL,
+armor INT NOT NULL,
+attack INT NOT NULL,
+level INT,
+exp INT,
+balance,
+location_id INT FOREIGN KEY(map),
+location_x INT,
+location_y INT,
+requirement_moster INT FOREIGN KEY(combat_log),
+requirement_quest INT FOREIGN KEY(history_log),
+created_at TIMESTAMP,
+updated_at TIMESTAMP,
+deleted_at TIMESTAMP
+```
+
+Tabuľka **monsters** predstavuje nepriateľské entity, s ktorými musí hráč bojovať. Každé monštrum má svoje jedinečné atribúty (život, mágia, rýchlosť, brnenie, útok) a taktiež svoj level. Ak hráč zabije monštrum, dostane ako odmenu body skúseností a hernú menu. Odmeny sú taktiež jedičné a súvisia s typom monštra (**monster_type**). Každé monštrum sa nachádza na mape (location_id) a má svoje koordináty. 
+
+**monster_types**
+
+```sql
+id serial PRIMARY KEY,
+name VARCHAR(45) UNIQUE NOT NULL,
+description TEXT(500) NOT NULL
+```
+
+Tabuľka **monster_types** definuje rôzne typy monštier, ktoré sa môžu v hre nachádzať.
+
+
+**chat**
 
 ```json
 {
