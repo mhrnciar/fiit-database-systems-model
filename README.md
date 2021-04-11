@@ -298,8 +298,8 @@ mp_modifier INT,
 speed_modifier INT,
 armor_modifier INT,
 attack_modifier INT,
-created_at TIMESTAMP,
-updated_at TIMESTAMP,
+created_at TIMESTAMP NOT NULL,
+updated_at TIMESTAMP NOT NULL,
 deleted_at TIMESTAMP
 ```
 
@@ -317,10 +317,10 @@ balance INT NOT NULL,
 reward_id INT NOT NULL FOREIGN KEY (items),
 npc_id INT FOREIGN KEY (npcs),
 location_id INT NOT NULL FOREIGN KEY (map),
-location_x INT,
-location_y INT,
-created_at TIMESTAMP,
-updated_at TIMESTAMP,
+location_x INT NOT NULL,
+location_y INT NOT NULL,
+created_at TIMESTAMP NOT NULL,
+updated_at TIMESTAMP NOT NULL,
 deleted_at TIMESTAMP
 ```
 
