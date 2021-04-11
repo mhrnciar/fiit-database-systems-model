@@ -33,7 +33,7 @@ mp INT NOT NULL,
 speed INT NOT NULL,
 armor INT NOT NULL,
 attack INT NOT NULL,
-level INT NOT NULL,
+level INT NOT NULL FOREIGN KEY (levels),
 exp INT NOT NULL,
 balance INT NOT NULL,
 location_x INT NOT NULL,
@@ -51,7 +51,7 @@ Jeden záznam v tabuľke **characters** predstavuje jednu postavu používateľa
 id serial PRIMARY KEY,
 name VARCHAR(45) NOT NULL,
 description TEXT(500) NOT NULL,
-value INT,
+value INT NOT NULL,
 hp_modifier INT,
 mp_modifier INT,
 speed_modifier INT,
@@ -71,9 +71,9 @@ V tabuľke **items** sa nachádzajú predmety, ktoré môžu byť využiteľné 
 
 ```sql
 id serial PRIMARY KEY,
-character_id INT FOREIGN KEY(characters),
-item_id INT FOREIGN KEY(items),
-count INT,
+character_id INT NOT NULL FOREIGN KEY (characters),
+item_id INT NOT NULL FOREIGN KEY (items),
+count INT NOT NULL,
 created_at TIMESTAMP NOT NULL,
 updated_at TIMESTAMP NOT NULL,
 deleted_at TIMESTAMP
@@ -109,8 +109,8 @@ Tabuľka **roles** predstavuje herné roly, ktoré si môže používateľ vybra
 
 ```sql
 id serial PRIMARY KEY,
-role_id INT NOT NULL FOREIGN KEY(roles),
-requirement_id LTREE NOT NULL FOREIGN KEY(role_abilities),
+role_id INT NOT NULL FOREIGN KEY (roles),
+requirement_id LTREE NOT NULL FOREIGN KEY (role_abilities),
 name VARCHAR(45) UNIQUE NOT NULL,
 description TEXT(500) NOT NULL,
 created_at TIMESTAMP NOT NULL,
@@ -128,8 +128,8 @@ Predtým je potrebné vytvoriť extension pomocou `CREATE EXTENSION ltree` a vyt
 
 ```sql
 id serial PRIMARY KEY,
-userA_id INT NOT NULL FOREIGN KEY(users),
-userB_id INT NOT NULL FOREIGN KEY(users),
+userA_id INT NOT NULL FOREIGN KEY (users),
+userB_id INT NOT NULL FOREIGN KEY (users),
 friend BOOLEAN,
 ignored BOOLEAN,
 created_at TIMESTAMP NOT NULL,
@@ -178,9 +178,9 @@ deleted_at TIMESTAMP
 
 ```sql
 id serial PRIMARY KEY,
-team_id INT FOREIGN KEY(teams_info) NOT NULL,
-character_id INT FOREIGN KEY(users) NOT NULL,
-character_role INT FOREIGN KEY(teams_roles) NOT NULL,
+team_id INT NOT NULL FOREIGN KEY (teams_info),
+character_id INT NOT NULL FOREIGN KEY (users),
+character_role INT NOT NULL FOREIGN KEY (teams_roles),
 created_at TIMESTAMP NOT NULL,
 updated_at TIMESTAMP NOT NULL,
 deleted_at TIMESTAMP
@@ -196,9 +196,9 @@ id serial PRIMARY KEY,
 name VARCHAR(45) UNIQUE NOT NULL,
 description TEXT(500) NOT NULL,
 min_level INT NOT NULL,
-requirement_moster INT FOREIGN KEY(combat_log),
-requirement_moster INT FOREIGN KEY(history_log),
-location INT[][] NOT NULL FOREIGN KEY(terrain),
+requirement_moster INT FOREIGN KEY (combat_log),
+requirement_moster INT FOREIGN KEY (history_log),
+location INT[][] NOT NULL FOREIGN KEY (terrain),
 created_at TIMESTAMP NOT NULL,
 updated_at TIMESTAMP NOT NULL,
 deleted_at TIMESTAMP
@@ -206,16 +206,29 @@ deleted_at TIMESTAMP
 
 Každý záznam tabuľky predstavuje dvojrozmernú maticu mapy, jej názov a popis spolu s minimálnym levelom, ktorý musí postava mať, aby mohla danú mapu navštíviť. Taktiež sa môže dopytovať combat_logu a history_logu, či bola splnená podmienka vstupu na ďalšiu mapu: či bola zabitá konkrétna príšera alebo bola splnená úloha. Každé políčko v matici predstavuje id terénu, ktorý je uložený v tabuľke **terrain**, či ide o trávu, strom, budovu a pod.
 
+**terrain**
+
+```sql
+id serial PRIMARY KEY,
+name VARCHAR(45) UNIQUE NOT NULL,
+description TEXT(500),
+img BLOB NOT NULL,
+properties JSON NOT NULL,
+created_at TIMESTAMP NOT NULL,
+updated_at TIMESTAMP NOT NULL,
+deleted_at TIMESTAMP
+```
+
+**terrain** predstavuje úložisko pre všetky terény a nehybné objekty, ktoré sa môžu v hre vyskytnúť. Každý terén má svoje vlastnosti, napríklad rýchlosť pohybu (cez močiar sa postava pohybuje pomalšie ako po ceste) zapísané vo formáte JSON a obrázok terénu je uložený ako veľký binárny objekt (BLOB).
 
 **npcs**
 
 ```sql
 id serial PRIMARY KEY,
 name VARCHAR(45) UNIQUE NOT NULL,
-location_id INT FOREIGN KEY(map),
-location_x INT,
-location_y INT,
-location_z INT,
+location_id INT NOT NULL FOREIGN KEY (map),
+location_x INT NOT NULL,
+location_y INT NOT NULL,
 created_at TIMESTAMP NOT NULL,
 updated_at TIMESTAMP NOT NULL,
 deleted_at TIMESTAMP
@@ -227,39 +240,105 @@ Tabuľka **npcs** predstavuje počítačom ovládanú entitu, ktorá bude hráč
 
 ```sql
 id serial PRIMARY KEY,
-type_id INT FOREIGN KEY(monster_type),
+type_id INT NOT NULL FOREIGN KEY (monster_type),
 hp INT NOT NULL,
 mp INT NOT NULL,
 speed INT NOT NULL,
 armor INT NOT NULL,
 attack INT NOT NULL,
-level INT,
-exp INT,
-balance,
-location_id INT FOREIGN KEY(map),
-location_x INT,
-location_y INT,
-requirement_moster INT FOREIGN KEY(combat_log),
-requirement_quest INT FOREIGN KEY(history_log),
-created_at TIMESTAMP,
-updated_at TIMESTAMP,
+level INT NOT NULL FOREIGN KEY (levels),
+exp INT NOT NULL,
+balance INT NOT NULL,
+location_id INT NOT NULL FOREIGN KEY (map),
+location_x INT NOT NULL,
+location_y INT NOT NULL,
+requirement_monster INT FOREIGN KEY (combat_log),
+requirement_quest INT FOREIGN KEY (history_log),
+created_at TIMESTAMP NOT NULL,
+updated_at TIMESTAMP NOT NULL,
 deleted_at TIMESTAMP
 ```
 
-Tabuľka **monsters** predstavuje nepriateľské entity, s ktorými musí hráč bojovať. Každé monštrum má svoje jedinečné atribúty (život, mágia, rýchlosť, brnenie, útok) a taktiež svoj level. Ak hráč zabije monštrum, dostane ako odmenu body skúseností a hernú menu. Odmeny sú taktiež jedičné a súvisia s typom monštra (**monster_type**). Každé monštrum sa nachádza na mape (location_id) a má svoje koordináty. 
+Tabuľka **monsters** predstavuje nepriateľské entity, s ktorými musí hráč bojovať. Každé monštrum má svoje vlastné atribúty (život, mágia, rýchlosť, brnenie, útok) a level, pomocou ktorého je možné určiť či daná príšera spadá do rozmedzia levelov, ktoré môže postava poraziť a podľa toho sa buď objaví alebo nie. Ak hráč zabije monštrum, dostane ako odmenu body skúseností a peniaze. Každé monštrum sa nachádza na mape (location_id) a má svoje koordináty. Niektoré postavy sa objavia iba ak bola zabitá predošlá príšera alebo bol ukončený nejaký quest, čo sa dá zistiť z combat alebo history logu.
 
 **monster_types**
 
 ```sql
 id serial PRIMARY KEY,
 name VARCHAR(45) UNIQUE NOT NULL,
-description TEXT(500) NOT NULL
+description TEXT(500) NOT NULL,
+created_at TIMESTAMP NOT NULL,
+updated_at TIMESTAMP NOT NULL,
+deleted_at TIMESTAMP
 ```
 
 Tabuľka **monster_types** definuje rôzne typy monštier, ktoré sa môžu v hre nachádzať.
 
+**loot**
+
+```sql
+id serial PRIMARY KEY,
+item_id INT NOT NULL FOREIGN KEY (items),
+monster_id INT NOT NULL FOREIGN KEY (monsters),
+count INT NOT NULL,
+created_at TIMESTAMP NOT NULL,
+updated_at TIMESTAMP NOT NULL,
+deleted_at TIMESTAMP
+```
+
+Každá postava okrem bodov skúseností a peňazí môže dať postave ďalšiu odmenu v podobe jedného alebo viacerých predmetov. Tieto odmeny sú zapísané v tabuľke **loot**.
+
+**levels**
+
+```sql
+id serial PRIMARY KEY,
+exp_needed INT NOT NULL,
+hp_modifier INT,
+mp_modifier INT,
+speed_modifier INT,
+armor_modifier INT,
+attack_modifier INT,
+created_at TIMESTAMP,
+updated_at TIMESTAMP,
+deleted_at TIMESTAMP
+```
+
+Id tabuľky **levels** predstavuje číslo levelu spolu s počtom bodov skúseností, ktoré musí hráč získať aby daný level dosiahol. Modifikátory určujú ktoré a o koľko sa zvýšia atribúty postavy. Tieto modifikátory predstavujú základ pre každú postavu v hre a modifikátory v tabuľke **roles** zas určujú ktoré atribúty sa navyše zvýšia pre posatvu danej roly.
+
+**quests**
+
+```sql
+id serial PRIMARY KEY,
+name VARCHAR(45) NOT NULL,
+description TEXT(500) NOT NULL,
+min_level INT,
+exp INT NOT NULL,
+balance INT NOT NULL,
+reward_id INT NOT NULL FOREIGN KEY (items),
+npc_id INT FOREIGN KEY (npcs),
+location_id INT NOT NULL FOREIGN KEY (map),
+location_x INT,
+location_y INT,
+created_at TIMESTAMP,
+updated_at TIMESTAMP,
+deleted_at TIMESTAMP
+```
+
+V tabuľke **quests** sú zapísané všetky úlohy, na ktoré môže postava naraziť. Za dokončenie úlohy postava dostane body skúseností, peniaze a nejaký predmet. Úlohy sa môžu vyskytovať voľne vo svete alebo ich môže dať nejaké NPC.
 
 **chat**
+
+```sql
+id serial PRIMARY KEY,
+team_id INT FOREIGN KEY (teams),
+relationship_id INT NOT NULL FOREIGN KEY (relationships),
+log JSON NOT NULL,
+created_at TIMESTAMP NOT NULL,
+updated_at TIMESTAMP NOT NULL,
+deleted_at TIMESTAMP
+```
+
+Chat medzi dvoma hráčmi alebo v rámci tímu sa ukladá v tabuľke **chat**, pričom ak medzi danými hráčmi je záznam v **relationships** nastavený na ignored, nie je možné si písať. Log komunikácie predstavuje JSON súbor, v ktorom sú uložené aj informácie o účastníkoch komunikácie v nasledovnom tvare:
 
 ```json
 {
@@ -286,10 +365,9 @@ Tabuľka **monster_types** definuje rôzne typy monštier, ktoré sa môžu v hr
 		},
 	]
 }
-
-
-
 ```
+
+Do JSON súboru je možné pridávať správy pomocou nasledovnej query:
 
 ```sql
 UPDATE chat SET log = jsonb_set(
@@ -301,3 +379,27 @@ UPDATE chat SET log = jsonb_set(
 WHERE id = 1;
 ```
 
+**character_achievements**
+
+```sql
+id serial PRIMARY KEY,
+character_id INT NOT NULL FOREIGN KEY (characters),
+achievement_id INT NOT NULL FOREIGN KEY (achievements),
+created_at TIMESTAMP NOT NULL,
+updated_at TIMESTAMP NOT NULL,
+deleted_at TIMESTAMP
+```
+
+**achievements**
+
+```sql
+id serial PRIMARY KEY,
+name VARCHAR(45) UNIQUE NOT NULL,
+description TEXT(500) NOT NULL,
+item_id INT FOREIGN KEY (items),
+created_at TIMESTAMP NOT NULL,
+updated_at TIMESTAMP NOT NULL,
+deleted_at TIMESTAMP
+```
+
+Tabuľka **achievements** popisuje všetky možné úspechy, ktoré môže postava získať. Niektoré úspechy môžu postave dať ako odmenu nejaký predmet. Všetky úspechy, ktoré postava získala sú zapísané v tabuľke **character_achievements**
