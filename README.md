@@ -7,15 +7,15 @@ zadanie4-po14-balazia-z4-hrnciar-vidiecan created by GitHub Classroom
 
 ```sql
 id serial PRIMARY KEY,
-username VARCHAR(45),
-password VARCHAR(45),
-email_address VARCHAR(200),
-last_login TIMESTAMP,
+username VARCHAR(45) NOT NULL,
+password VARCHAR(45) NOT NULL,
+email_address VARCHAR(200) NOT NULL,
+last_login TIMESTAMP NOT NULL,
 facebook_token VARCHAR(45),
 google_token VARCHAR(45),
-is_online BOOLEAN,
-created_at TIMESTAMP,
-updated_at TIMESTAMP,
+is_online BOOLEAN NOT NULL,
+created_at TIMESTAMP NOT NULL,
+updated_at TIMESTAMP NOT NULL,
 deleted_at TIMESTAMP
 ```
 Používateľ sa môže zaregistrovať pomocou emailovej adresy a hesla alebo využiť možnosť prihlásenia pomocou Facebookového alebo Google účtu, ktorý prostredníctvom ich prihlasovacieho API vráti autentifikačný token používateľa, z ktorého sa dajú získať údaje o používateľovi. is_online informuje ostatných hráčov, či je alebo nie je daný používateľ v hre.
@@ -24,23 +24,22 @@ Používateľ sa môže zaregistrovať pomocou emailovej adresy a hesla alebo vy
 
 ```sql
 id serial PRIMARY KEY,
-name VARCHAR(45),
-role_id INT FOREIGN KEY (roles),
-user_id INT FOREIGN KEY (users),
-location_id INT FOREIGN KEY (map),
-hp INT,
-mp INT,
-speed INT,
-armor INT,
-attack INT,
-level INT,
-exp INT,
-balance INT,
-location_x FLOAT,
-location_y FLOAT,
-location_z FLOAT,
-created_at TIMESTAMP,
-updated_at TIMESTAMP,
+name VARCHAR(45) NOT NULL,
+role_id INT NOT NULL FOREIGN KEY (roles),
+user_id INT NOT NULL FOREIGN KEY (users),
+location_id INT NOT NULL FOREIGN KEY (map),
+hp INT NOT NULL,
+mp INT NOT NULL,
+speed INT NOT NULL,
+armor INT NOT NULL,
+attack INT NOT NULL,
+level INT NOT NULL,
+exp INT NOT NULL,
+balance INT NOT NULL,
+location_x INT NOT NULL,
+location_y INT NOT NULL,
+created_at TIMESTAMP NOT NULL,
+updated_at TIMESTAMP NOT NULL,
 deleted_at TIMESTAMP
 ```
 
@@ -51,12 +50,12 @@ Jeden záznam v tabuľke **characters** predstavuje jednu postavu používateľa
 
 ```sql
 id serial PRIMARY KEY,
-name VARCHAR(45),
-hp_base INT,
-mp_base INT,
-speed_base INT,
-armor_base INT,
-attack_base INT,
+name VARCHAR(45) NOT NULL,
+hp_base INT NOT NULL,
+mp_base INT NOT NULL,
+speed_base INT NOT NULL,
+armor_base INT NOT NULL,
+attack_base INT NOT NULL,
 hp_modifier INT,
 mp_modifier INT,
 speed_modifier INT,
@@ -67,19 +66,19 @@ updated_at TIMESTAMP,
 deleted_at TIMESTAMP
 ```
 
-Tabuľka **roles** predstavuje herné roly, ktoré si môže používateľ vybrať pre svoju postavu. Base atribúty predstavujú základné atribúty postáv s danou rolou a modifier atribúty určujú, o koľko násovbne sa zvýši atribút pri dosiahnutí ďalšieho levelu.
+Tabuľka **roles** predstavuje herné roly, ktoré si môže používateľ vybrať pre svoju postavu. Base atribúty predstavujú základné atribúty postáv s danou rolou a modifier atribúty určujú, o koľko sa zvýši atribút pri dosiahnutí ďalšieho levelu, pričom pri niektorých rolách sa konkrétne atribúty nemusia meniť vôbec.
 
 
 **role_abilities**
 
 ```sql
 id serial PRIMARY KEY,
-role_id INT FOREIGN KEY(roles),
-requirement_id LTREE FOREIGN KEY(role_abilities),
-name VARCHAR(45),
-description TEXT(500),
-created_at TIMESTAMP,
-updated_at TIMESTAMP,
+role_id INT NOT NULL FOREIGN KEY(roles),
+requirement_id LTREE NOT NULL FOREIGN KEY(role_abilities),
+name VARCHAR(45) NOT NULL,
+description TEXT(500) NOT NULL,
+created_at TIMESTAMP NOT NULL,
+updated_at TIMESTAMP NOT NULL,
 deleted_at TIMESTAMP
 ```
 
@@ -93,12 +92,12 @@ Predtým je potrebné vytvoriť extension pomocou `CREATE EXTENSION ltree` a vyt
 
 ```sql
 id serial PRIMARY KEY,
-userA_id INT FOREIGN KEY(users),
-userB_id INT FOREIGN KEY(users),
+userA_id INT NOT NULL FOREIGN KEY(users),
+userB_id INT NOT NULL FOREIGN KEY(users),
 friend BOOLEAN,
 ignored BOOLEAN,
-created_at TIMESTAMP,
-updated_at TIMESTAMP,
+created_at TIMESTAMP NOT NULL,
+updated_at TIMESTAMP NOT NULL,
 deleted_at TIMESTAMP
 ```
 
@@ -116,12 +115,12 @@ JOIN friends f ON p.id = f.friend_id;
 
 ```sql
 id serial PRIMARY KEY,
-name VARCHAR(45),
+name VARCHAR(45) NOT NULL,
 description TEXT(500),
-max_members INT,
-team_balance BIGINT,
-created_at TIMESTAMP,
-updated_at TIMESTAMP,
+max_members INT NOT NULL,
+team_balance BIGINT NOT NULL,
+created_at TIMESTAMP NOT NULL,
+updated_at TIMESTAMP NOT NULL,
 deleted_at TIMESTAMP
 ```
 
@@ -129,10 +128,13 @@ deleted_at TIMESTAMP
 
 ```sql
 id serial PRIMARY KEY,
-name VARCHAR(45),
+name VARCHAR(45) NOT NULL,
 description TEXT(500),
-created_at TIMESTAMP,
-updated_at TIMESTAMP,
+modify_members BOOLEAN,
+modify_info BOOLEAN,
+use_balance BOOLEAN,
+created_at TIMESTAMP NOT NULL,
+updated_at TIMESTAMP NOT NULL,
 deleted_at TIMESTAMP
 ```
 
@@ -140,11 +142,11 @@ deleted_at TIMESTAMP
 
 ```sql
 id serial PRIMARY KEY,
-team_id INT FOREIGN KEY(teams_info),
-character_id INT FOREIGN KEY(users),
-character_role INT FOREIGN KEY(teams_roles),
-created_at TIMESTAMP,
-updated_at TIMESTAMP,
+team_id INT FOREIGN KEY(teams_info) NOT NULL,
+character_id INT FOREIGN KEY(users) NOT NULL,
+character_role INT FOREIGN KEY(teams_roles) NOT NULL,
+created_at TIMESTAMP NOT NULL,
+updated_at TIMESTAMP NOT NULL,
 deleted_at TIMESTAMP
 ```
 
@@ -155,18 +157,18 @@ Tabuľka **teams** predstavuje príslušnosť používateľa do konkrétneho tí
 
 ```sql
 id serial PRIMARY KEY,
-name VARCHAR(45),
-description TEXT(500),
-min_level INT,
+name VARCHAR(45) NOT NULL,
+description TEXT(500) NOT NULL,
+min_level INT NOT NULL,
 requirement_moster INT FOREIGN KEY(combat_log),
 requirement_moster INT FOREIGN KEY(history_log),
-location INT[][],
-created_at TIMESTAMP,
-updated_at TIMESTAMP,
+location INT[][] NOT NULL FOREIGN KEY(terrain),
+created_at TIMESTAMP NOT NULL,
+updated_at TIMESTAMP NOT NULL,
 deleted_at TIMESTAMP
 ```
 
-Každý záznam tabuľky predstavuje dvojrozmernú maticu mapy, jej názov a popis spolu s minimálnym levelom, ktorý musí postava mať, aby mohla danú mapu navštíviť. Taktiež sa môže dopytovať combat_logu a history_logu, či bola splnená podmienka vstupu na ďalšiu mapu: či bola zabitá konkrétna príšera alebo bola splnená úloha. 
+Každý záznam tabuľky predstavuje dvojrozmernú maticu mapy, jej názov a popis spolu s minimálnym levelom, ktorý musí postava mať, aby mohla danú mapu navštíviť. Taktiež sa môže dopytovať combat_logu a history_logu, či bola splnená podmienka vstupu na ďalšiu mapu: či bola zabitá konkrétna príšera alebo bola splnená úloha. Každé políčko v matici predstavuje id terénu, ktorý je uložený v tabuľke **terrain**, či ide o trávu, strom, budovu a pod.
 
 
 **chat:**
