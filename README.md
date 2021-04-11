@@ -7,12 +7,12 @@ zadanie4-po14-balazia-z4-hrnciar-vidiecan created by GitHub Classroom
 
 ```sql
 id serial PRIMARY KEY,
-username VARCHAR(45) NOT NULL,
+username VARCHAR(45) UNIQUE NOT NULL,
 password VARCHAR(45) NOT NULL,
-email_address VARCHAR(200) NOT NULL,
+email_address VARCHAR(200) UNIQUE NOT NULL,
 last_login TIMESTAMP NOT NULL,
-facebook_token VARCHAR(45),
-google_token VARCHAR(45),
+facebook_token VARCHAR(45) UNIQUE,
+google_token VARCHAR(45) UNIQUE,
 is_online BOOLEAN NOT NULL,
 created_at TIMESTAMP NOT NULL,
 updated_at TIMESTAMP NOT NULL,
@@ -50,7 +50,7 @@ Jeden záznam v tabuľke **characters** predstavuje jednu postavu používateľa
 
 ```sql
 id serial PRIMARY KEY,
-name VARCHAR(45) NOT NULL,
+name VARCHAR(45) UNIQUE NOT NULL,
 hp_base INT NOT NULL,
 mp_base INT NOT NULL,
 speed_base INT NOT NULL,
@@ -75,7 +75,7 @@ Tabuľka **roles** predstavuje herné roly, ktoré si môže používateľ vybra
 id serial PRIMARY KEY,
 role_id INT NOT NULL FOREIGN KEY(roles),
 requirement_id LTREE NOT NULL FOREIGN KEY(role_abilities),
-name VARCHAR(45) NOT NULL,
+name VARCHAR(45) UNIQUE NOT NULL,
 description TEXT(500) NOT NULL,
 created_at TIMESTAMP NOT NULL,
 updated_at TIMESTAMP NOT NULL,
@@ -115,7 +115,7 @@ JOIN friends f ON p.id = f.friend_id;
 
 ```sql
 id serial PRIMARY KEY,
-name VARCHAR(45) NOT NULL,
+name VARCHAR(45) UNIQUE NOT NULL,
 description TEXT(500),
 max_members INT NOT NULL,
 team_balance BIGINT NOT NULL,
@@ -128,7 +128,7 @@ deleted_at TIMESTAMP
 
 ```sql
 id serial PRIMARY KEY,
-name VARCHAR(45) NOT NULL,
+name VARCHAR(45) UNIQUE NOT NULL,
 description TEXT(500),
 modify_members BOOLEAN,
 modify_info BOOLEAN,
@@ -150,14 +150,14 @@ updated_at TIMESTAMP NOT NULL,
 deleted_at TIMESTAMP
 ```
 
-Tabuľka **teams** predstavuje príslušnosť používateľa do konkrétneho tímu. V rámci tímu môže mať používateľ rolu z tabuľky teams_roles, ktorá definuje právomoci v tíme. V tabuľke **teams_info** sú uložené informácie o konkrétnom tíme, ako sú jeho meno, spoločné financie a maximálny počet hráčov v tíme.
+Tabuľka **teams** predstavuje príslušnosť používateľa do konkrétneho tímu. V rámci tímu môže mať používateľ rolu z tabuľky teams_roles, ktorá definuje právomoci v tíme: modify_members definuje či môže modifikovať ostatných členov tímu, pridať nových hráčov alebo ich vyhodiť z tímu a zmeniť ich rolu, modify_info definuje čimôže meniť meno alebo popis tímu a use_balance určuje či môže hráč manipulovať so zdieľanými financiami tímu. V tabuľke **teams_info** sú uložené informácie o konkrétnom tíme, ako sú jeho meno, spoločné financie a maximálny počet hráčov v tíme.
 
 
 **map**
 
 ```sql
 id serial PRIMARY KEY,
-name VARCHAR(45) NOT NULL,
+name VARCHAR(45) UNIQUE NOT NULL,
 description TEXT(500) NOT NULL,
 min_level INT NOT NULL,
 requirement_moster INT FOREIGN KEY(combat_log),
