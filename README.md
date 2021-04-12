@@ -403,3 +403,42 @@ deleted_at TIMESTAMP
 ```
 
 Tabuľka **achievements** popisuje všetky možné úspechy, ktoré môže postava získať. Niektoré úspechy môžu postave dať ako odmenu nejaký predmet. Všetky úspechy, ktoré postava získala sú zapísané v tabuľke **character_achievements**
+
+
+**history_log**
+
+```sql
+id serial PRIMARY KEY,
+character_id INT FOREIGN KEY(characters),
+quest_id INT FOREIGN KEY(quests),
+location_id FOREIGN KEY(map),
+item_id INT FOREIGN KEY (items),
+location_x INT,
+location_y INT,
+created_at TIMESTAMP NOT NULL,
+updated_at TIMESTAMP NOT NULL,
+deleted_at TIMESTAMP
+```
+
+Tabuľka **history_log** prezentuje záznamy, čo sa v hre udialo. Záznam sa viaže na postavu v hre a hovorí o splnení nejakej úlohy alebo o získaní predmetu. Záznam taktiež upresňuje, v akej časti a na akých koordinátoch mapy sa udalosť stala. Zo záznamov tejto tabuľky je možné vypočítavať počty vykonaných úloh alebo zozbieraných predmetov hráča, ktoré je možné použiť na získanie úspechu.
+
+**combat_log**
+
+```sql
+id serial PRIMARY KEY,
+character_id INT FOREIGN KEY(characters),
+enemy_character_id INT FOREIGN KEY(characters),
+enemy_npc_id INT FOREIGN KEY(npcs),
+team_id INT FOREIGN KEY(teams),
+monster_id INT FOREIGN KEY(monsters),
+log JSON,
+location_id FOREIGN KEY(map),
+item_id INT FOREIGN KEY (items),
+location_x INT,
+location_y INT,
+created_at TIMESTAMP NOT NULL,
+updated_at TIMESTAMP NOT NULL,
+deleted_at TIMESTAMP
+```
+
+Tabuľka **combat_log** obsahuje záznamy, ktoré sa viažu na každú postavu v hre. Záznamy hovoria o tom, aký súboj a s akou entitou hry sa súboj vykonáva. Súboj sa môže vykonávať s ďalšou nepriateľkou postavou v hre alebo s nepriateľským npc, iným teamom alebo príšerou. Čo sa v súboji udialo, napr.(A zaútočil na B a znížil hp o 10, B zaútočil na A a znížil hp o 12 + jeho predmet poskytuje zníženie pohybu A o 10%), sa updatuje v stĺci log. Taktiež je prítomný záznam o tom, v akej časti mapy súboj nastal. Zo záznamov tejto tabuľky je možné vypočítavať počty vykonaných úloh alebo zozbieraných predmetov hráča, ktoré je možné použiť na získanie úspechu.
