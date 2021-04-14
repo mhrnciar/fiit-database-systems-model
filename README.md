@@ -241,6 +241,22 @@ Tabuľka **npcs** predstavuje počítačom ovládanú entitu, ktorá bude hráč
 ```sql
 id serial PRIMARY KEY,
 type_id INT NOT NULL FOREIGN KEY (monster_type),
+location_id INT NOT NULL FOREIGN KEY (map),
+location_x INT NOT NULL,
+location_y INT NOT NULL,
+created_at TIMESTAMP NOT NULL,
+updated_at TIMESTAMP NOT NULL,
+deleted_at TIMESTAMP
+```
+
+Tabuľka **monsters** predstavuje nepriateľské entity, s ktorými musí hráč bojovať. Každé monštrum sa nachádza na mape (location_id) a má svoje koordináty.
+
+**monster_types**
+
+```sql
+id serial PRIMARY KEY,
+name VARCHAR(45) UNIQUE NOT NULL,
+description TEXT(500) NOT NULL,
 hp INT NOT NULL,
 mp INT NOT NULL,
 speed INT NOT NULL,
@@ -249,44 +265,16 @@ attack INT NOT NULL,
 level INT NOT NULL FOREIGN KEY (levels),
 exp INT NOT NULL,
 balance INT NOT NULL,
-location_id INT NOT NULL FOREIGN KEY (map),
-location_x INT NOT NULL,
-location_y INT NOT NULL,
 requirement_monster INT FOREIGN KEY (combat_log),
 requirement_quest INT FOREIGN KEY (history_log),
+item_id INT FOREIGN KEY (items),
 created_at TIMESTAMP NOT NULL,
 updated_at TIMESTAMP NOT NULL,
 deleted_at TIMESTAMP
 ```
 
-Tabuľka **monsters** predstavuje nepriateľské entity, s ktorými musí hráč bojovať. Každé monštrum má svoje vlastné atribúty (život, mágia, rýchlosť, brnenie, útok) a level, pomocou ktorého je možné určiť či daná príšera spadá do rozmedzia levelov, ktoré môže postava poraziť a podľa toho sa buď objaví alebo nie. Ak hráč zabije monštrum, dostane ako odmenu body skúseností a peniaze. Každé monštrum sa nachádza na mape (location_id) a má svoje koordináty. Niektoré postavy sa objavia iba ak bola zabitá predošlá príšera alebo bol ukončený nejaký quest, čo sa dá zistiť z combat alebo history logu.
+Tabuľka **monster_types** definuje rôzne typy monštier, ktoré sa môžu v hre nachádzať. Každý typ monštra má svoje vlastné atribúty (život, mágia, rýchlosť, brnenie, útok) a level, pomocou ktorého je možné určiť či daná príšera spadá do rozmedzia levelov, ktoré môže postava poraziť a podľa toho sa buď objaví alebo nie. Ak hráč zabije monštrum, dostane ako odmenu body skúseností a peniaze. Každá príšera okrem bodov skúseností a peňazí môže dať postave ďalšiu odmenu v podobe jedného predmetu. Niektoré príšery sa objavia iba ak bola zabitá predošlá príšera alebo bol ukončený nejaký quest, čo sa dá zistiť z combat alebo history logu.
 
-**monster_types**
-
-```sql
-id serial PRIMARY KEY,
-name VARCHAR(45) UNIQUE NOT NULL,
-description TEXT(500) NOT NULL,
-created_at TIMESTAMP NOT NULL,
-updated_at TIMESTAMP NOT NULL,
-deleted_at TIMESTAMP
-```
-
-Tabuľka **monster_types** definuje rôzne typy monštier, ktoré sa môžu v hre nachádzať.
-
-**loot**
-
-```sql
-id serial PRIMARY KEY,
-item_id INT NOT NULL FOREIGN KEY (items),
-monster_id INT NOT NULL FOREIGN KEY (monsters),
-count INT NOT NULL,
-created_at TIMESTAMP NOT NULL,
-updated_at TIMESTAMP NOT NULL,
-deleted_at TIMESTAMP
-```
-
-Každá postava okrem bodov skúseností a peňazí môže dať postave ďalšiu odmenu v podobe jedného alebo viacerých predmetov. Tieto odmeny sú zapísané v tabuľke **loot**.
 
 **levels**
 
