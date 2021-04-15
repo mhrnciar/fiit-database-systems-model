@@ -128,14 +128,16 @@ DROP TABLE IF EXISTS game.history_log CASCADE;
 CREATE TABLE IF NOT EXISTS game.history_log (
     id SERIAL PRIMARY KEY,
     character_id INT NOT NULL,
-    quest_id INT CHECK (history_log.item_id IS NULL),
+    quest_id INT,
     item_id INT CHECK (history_log.quest_id IS NULL),
     location_id INT NOT NULL,
     location_x INT NOT NULL,
     location_y INT NOT NULL,
     created_at TIMESTAMP NOT NULL,
     updated_at TIMESTAMP NOT NULL,
-    deleted_at TIMESTAMP
+    deleted_at TIMESTAMP,
+    CONSTRAINT historylog_check CHECK ((history_log.quest_id IS NOT NULL AND history_log.item_id IS NULL)
+                                           OR (history_log.item_id IS NOT NULL AND history_log.quest_id IS NULL))
 );
 
 
@@ -260,8 +262,8 @@ DROP TABLE IF EXISTS game.combat_log CASCADE;
 CREATE TABLE IF NOT EXISTS game.combat_log (
     id SERIAL PRIMARY KEY,
     character_id INT NOT NULL,
-    enemy_character_id INT CHECK (combat_log.enemy_npc_id IS NULL AND combat_log.team_id IS NULL AND combat_log.monster_id IS NULL),
-    enemy_npc_id INT CHECK (combat_log.enemy_character_id IS NULL AND combat_log.team_id IS NULL AND combat_log.monster_id IS NULL),
+    enemy_character_id INT,
+    enemy_npc_id INT,
     team_id INT CHECK (combat_log.enemy_npc_id IS NULL AND combat_log.enemy_character_id IS NULL AND combat_log.monster_id IS NULL),
     monster_id INT CHECK (combat_log.enemy_npc_id IS NULL AND combat_log.team_id IS NULL AND combat_log.enemy_character_id IS NULL),
     log JSONB NOT NULL,
@@ -270,7 +272,11 @@ CREATE TABLE IF NOT EXISTS game.combat_log (
     location_y INT NOT NULL,
     created_at TIMESTAMP NOT NULL,
     updated_at TIMESTAMP NOT NULL,
-    deleted_at TIMESTAMP
+    deleted_at TIMESTAMP,
+    CONSTRAINT combatlog_check CHECK ((combat_log.enemy_character_id IS NOT NULL AND combat_log.enemy_npc_id IS NULL AND combat_log.team_id IS NULL AND combat_log.monster_id IS NULL)
+                                          OR (combat_log.enemy_character_id IS NULL AND combat_log.enemy_npc_id IS NOT NULL AND combat_log.team_id IS NULL AND combat_log.monster_id IS NULL)
+                                          OR (combat_log.enemy_character_id IS NULL AND combat_log.enemy_npc_id IS NULL AND combat_log.team_id IS NOT NULL AND combat_log.monster_id IS NULL)
+                                          OR (combat_log.enemy_character_id IS NULL AND combat_log.enemy_npc_id IS NULL AND combat_log.team_id IS NULL AND combat_log.monster_id IS NOT NULL))
 );
 
 
@@ -364,11 +370,13 @@ CREATE TABLE IF NOT EXISTS game.relationships (
     id SERIAL PRIMARY KEY,
     userA_id INT NOT NULL CHECK (relationships.userA_id != relationships.userB_id),
     userB_id INT NOT NULL CHECK (relationships.userB_id != relationships.userA_id),
-    friend BOOLEAN NOT NULL DEFAULT false CHECK (ignored IS NOT true),
-    ignored BOOLEAN NOT NULL DEFAULT false CHECK (friend IS NOT true),
+    friend BOOLEAN NOT NULL DEFAULT false,
+    ignored BOOLEAN NOT NULL DEFAULT false,
     created_at TIMESTAMP NOT NULL,
     updated_at TIMESTAMP NOT NULL,
-    deleted_at TIMESTAMP
+    deleted_at TIMESTAMP,
+    CONSTRAINT friend_ignored_check CHECK ((friend IS true AND ignored IS false)
+                                              OR (ignored IS true AND friend IS false))
 );
 
 
@@ -379,12 +387,14 @@ DROP TABLE IF EXISTS game.chat CASCADE;
 
 CREATE TABLE IF NOT EXISTS game.chat (
     id SERIAL PRIMARY KEY,
-    team_id INT CHECK (chat.relationship_id IS NULL),
-    relationship_id INT CHECK (chat.team_id IS NULL),
+    team_id INT,
+    relationship_id INT,
     log JSONB NOT NULL,
     created_at TIMESTAMP NOT NULL,
     updated_at TIMESTAMP NOT NULL,
-    deleted_at TIMESTAMP
+    deleted_at TIMESTAMP,
+    CONSTRAINT chat_check CHECK ((chat.relationship_id IS NOT NULL AND chat.team_id IS NULL)
+                                             OR (chat.team_id IS NOT NULL AND chat.relationship_id IS NULL))
 );
 
 
@@ -459,8 +469,8 @@ ALTER TABLE game.combat_log ADD CONSTRAINT fk_teamid FOREIGN KEY (team_id) REFER
 ALTER TABLE game.combat_log ADD CONSTRAINT fk_enemynpcid FOREIGN KEY (enemy_npc_id) REFERENCES game.npcs (id) ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE game.combat_log ADD CONSTRAINT fk_locationid FOREIGN KEY (location_id) REFERENCES game.map (id) ON DELETE NO ACTION ON UPDATE NO ACTION;
 
-ALTER TABLE game.monster_types ADD CONSTRAINT fk_reqmonster FOREIGN KEY (requirement_monster) REFERENCES game.combat_log (id) ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE game.monster_types ADD CONSTRAINT fk_reqhistory FOREIGN KEY (requirement_quest) REFERENCES game.history_log (id) ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE game.monster_types ADD CONSTRAINT fk_reqmonster FOREIGN KEY (requirement_monster) REFERENCES game.monster_types (id) ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE game.monster_types ADD CONSTRAINT fk_reqhistory FOREIGN KEY (requirement_quest) REFERENCES game.quests (id) ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE game.monster_types ADD CONSTRAINT fk_level FOREIGN KEY (level) REFERENCES game.levels (id) ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE game.monster_types ADD CONSTRAINT fk_itemid FOREIGN KEY (item_id) REFERENCES game.items (id) ON DELETE NO ACTION ON UPDATE NO ACTION;
 
@@ -579,7 +589,18 @@ VALUES (1, 1, 0, 0, current_timestamp, current_timestamp), (1, 1, 2, 3, current_
        (1, 1, 4, 2, current_timestamp, current_timestamp), (1, 2, 4, 1, current_timestamp, current_timestamp),
        (1, 2, 0, 1, current_timestamp, current_timestamp), (1, 2, 2, 3, current_timestamp, current_timestamp),
        (1, 2, 3, 1, current_timestamp, current_timestamp), (1, 2, 4, 3, current_timestamp, current_timestamp),
-       (1, 3, 0, 5, current_timestamp, current_timestamp), (1, 3, 1, 8, current_timestamp, current_timestamp);
+       (1, 3, 0, 5, current_timestamp, current_timestamp), (1, 3, 1, 8, current_timestamp, current_timestamp),
+       (4, 2, 0, 0, current_timestamp, current_timestamp);
+
+INSERT INTO game.npcs (name, location_id, location_x, location_y, created_at, updated_at)
+VALUES ('Woodsman', 2, 2, 4, current_timestamp, current_timestamp);
+INSERT INTO game.npcs (name, location_id, location_x, location_y, created_at, updated_at)
+VALUES ('Drowning child', 3, 7, 1, current_timestamp, current_timestamp);
+
+INSERT INTO game.quests (name, description, min_level, exp, balance, reward_id, location_id, location_x, location_y, created_at, updated_at)
+VALUES ('Save drowning child', 'You came across a drowning child in the river', 3, 100, 25, 1, 3, 9, 3, current_timestamp, current_timestamp);
+INSERT INTO game.quests (name, description, min_level, exp, balance, reward_id, npc_id, created_at, updated_at)
+VALUES ('Defeat Goblin Tribe Chief', 'Defeat a Goblin Chief to gain access to new map', 2, 220, 50, 4, 1, current_timestamp, current_timestamp);
 
 INSERT INTO game.achievements (name, description, item_id, created_at, updated_at)
 VALUES ('Slime Exterminator', 'Defeat 100 Slimes', 5, current_timestamp, current_timestamp),
@@ -597,3 +618,28 @@ VALUES ('Popolvar', 1, 1, 62, 0, 22, 29, 21, 4, 1254, 467, 3, 2, 2, current_time
 INSERT INTO game.characters_achievements (character_id, achievement_id, created_at, updated_at)
 VALUES (1, 1, current_timestamp, current_timestamp), (1, 2, current_timestamp, current_timestamp),
        (3, 1, current_timestamp, current_timestamp), (5, 1, current_timestamp, current_timestamp);
+
+INSERT INTO game.relationships (usera_id, userb_id, friend, created_at, updated_at)
+VALUES (1, 2, true, current_timestamp, current_timestamp),
+       (3, 5, true, current_timestamp, current_timestamp),
+       (1, 3, true, current_timestamp, current_timestamp),
+       (2, 3, true, current_timestamp, current_timestamp);
+INSERT INTO game.relationships (usera_id, userb_id, ignored, created_at, updated_at)
+VALUES (2, 4, true, current_timestamp, current_timestamp),
+       (4, 1, true, current_timestamp, current_timestamp),
+       (4, 5, true, current_timestamp, current_timestamp);
+
+INSERT INTO game.teams_info (name, description, max_members, team_balance, created_at, updated_at)
+VALUES ('Black Hand', 'We are black hand! Welcome new members!', 100, 12364, current_timestamp, current_timestamp),
+       ('Army of Light', 'Army of light shine on you', 55, 53840, current_timestamp, current_timestamp);
+
+INSERT INTO game.teams_roles (name, modify_members, modify_info, use_balance, created_at, updated_at)
+VALUES ('Owner', true, true, true, current_timestamp, current_timestamp),
+       ('Admin', true, false, true, current_timestamp, current_timestamp),
+       ('Banker', false, false, true, current_timestamp, current_timestamp),
+       ('Member', false, false, false, current_timestamp, current_timestamp);
+
+INSERT INTO game.teams (team_id, character_id, character_role, created_at, updated_at)
+VALUES (1, 1, 1, current_timestamp, current_timestamp), (1, 3, 2, current_timestamp, current_timestamp),
+       (1, 5, 4, current_timestamp, current_timestamp), (1, 4, 4, current_timestamp, current_timestamp),
+       (2, 2, 1, current_timestamp, current_timestamp), (2, 4, 3, current_timestamp, current_timestamp);
