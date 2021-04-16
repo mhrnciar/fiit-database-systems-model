@@ -337,7 +337,7 @@ CREATE TABLE IF NOT EXISTS game.role_abilities (
     name VARCHAR(45) UNIQUE NOT NULL,
     description TEXT NOT NULL,
     role_id INT NOT NULL,
-    requirement_id game.ltree,
+    requirement_id game.ltree NOT NULL,
     created_at TIMESTAMP NOT NULL,
     updated_at TIMESTAMP NOT NULL,
     deleted_at TIMESTAMP
