@@ -513,7 +513,7 @@ ALTER TABLE game.characters_achievements ADD CONSTRAINT fk_achievementid FOREIGN
 CREATE OR REPLACE VIEW game.friend_data AS
 SELECT p.charname, p.rolename, p.level, f.userA_id, f.userB_id
 FROM (SELECT c.id, c.name charname, r.name rolename, c.level
-FROM game.characters c JOIN roles r on c.role_id = r.id) p
+FROM game.characters c JOIN game.roles r on c.role_id = r.id) p
 JOIN game.relationships f ON p.id = f.userB_id;
 
 
