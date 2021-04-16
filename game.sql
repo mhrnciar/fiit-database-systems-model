@@ -320,6 +320,7 @@ CREATE TABLE IF NOT EXISTS game.characters (
     location_id INT NOT NULL,
     location_x INT NOT NULL,
     location_y INT NOT NULL,
+    abilities JSONB NOT NULL,
     created_at TIMESTAMP NOT NULL,
     updated_at TIMESTAMP NOT NULL,
     deleted_at TIMESTAMP
@@ -607,13 +608,20 @@ VALUES ('Slime Exterminator', 'Defeat 100 Slimes', 5, current_timestamp, current
        ('The Goblins Doom', 'Defeat 100 Goblins', 5, current_timestamp, current_timestamp),
        ('The Long Road', 'Walk 100 km', 6, current_timestamp, current_timestamp);
 
-INSERT INTO game.characters (name, role_id, user_id, hp, mp, speed, armor, attack, level, exp, balance, location_id, location_x, location_y, created_at, updated_at)
-VALUES ('Popolvar', 1, 1, 62, 0, 22, 29, 21, 4, 1254, 467, 3, 2, 2, current_timestamp, current_timestamp),
-       ('Princ Krason', 1, 4, 47, 0, 15, 17, 14, 2, 265, 112, 1, 2, 0, current_timestamp, current_timestamp),
-       ('Abracadabrus420', 2, 2, 44, 36, 22, 17, 19, 3, 622, 210, 2, 0, 0, current_timestamp, current_timestamp),
-       ('Conan', 5, 3, 86, 0, 12, 34, 27, 4, 866, 374, 3, 6, 3, current_timestamp, current_timestamp),
-       ('Panoramatix', 4, 2, 42, 30, 15, 17, 20, 3, 311, 136, 2, 2, 2, current_timestamp, current_timestamp),
-       ('Nighwalker', 3, 5, 55, 0, 17, 5, 14, 1, 0, 0, 1, 2, 0, current_timestamp, current_timestamp);
+INSERT INTO game.characters (name, role_id, user_id, hp, mp, speed, armor, attack, level, exp, balance, location_id, location_x, location_y, abilities, created_at, updated_at)
+VALUES ('Popolvar', 1, 1, 62, 0, 22, 29, 21, 4, 1254, 467, 3, 2, 2, '{"abilities": [2, 3, 1]}', current_timestamp, current_timestamp),
+       ('Princ Krason', 1, 4, 47, 0, 15, 17, 14, 2, 265, 112, 1, 2, 0, '{"abilities": [1]}', current_timestamp, current_timestamp),
+       ('Abracadabrus420', 2, 2, 44, 36, 22, 17, 19, 3, 622, 210, 2, 0, 0, '{"abilities": []}', current_timestamp, current_timestamp),
+       ('Conan', 5, 3, 86, 0, 12, 34, 27, 4, 866, 374, 3, 6, 3, '{"abilities": []}', current_timestamp, current_timestamp),
+       ('Panoramatix', 4, 2, 42, 30, 15, 17, 20, 3, 311, 136, 2, 2, 2, '{"abilities": []}', current_timestamp, current_timestamp),
+       ('Nighwalker', 3, 5, 55, 0, 17, 5, 14, 1, 0, 0, 1, 2, 0, '{"abilities": []}', current_timestamp, current_timestamp);
+
+-- Insert new ability to user with id = 2
+UPDATE game.characters SET abilities = jsonb_set(
+  abilities::jsonb,
+  array['abilities'],
+  (abilities->'abilities')::jsonb || '6'::jsonb)
+WHERE id = 2;
 
 INSERT INTO game.characters_achievements (character_id, achievement_id, created_at, updated_at)
 VALUES (1, 1, current_timestamp, current_timestamp), (1, 2, current_timestamp, current_timestamp),
@@ -621,7 +629,7 @@ VALUES (1, 1, current_timestamp, current_timestamp), (1, 2, current_timestamp, c
 
 INSERT INTO game.relationships (usera_id, userb_id, friend, created_at, updated_at)
 VALUES (1, 2, true, current_timestamp, current_timestamp),
-       (3, 5, true, current_timestamp, current_timestamp),
+       (3, 4, true, current_timestamp, current_timestamp),
        (1, 3, true, current_timestamp, current_timestamp),
        (2, 3, true, current_timestamp, current_timestamp);
 INSERT INTO game.relationships (usera_id, userb_id, ignored, created_at, updated_at)
@@ -643,3 +651,13 @@ INSERT INTO game.teams (team_id, character_id, character_role, created_at, updat
 VALUES (1, 1, 1, current_timestamp, current_timestamp), (1, 3, 2, current_timestamp, current_timestamp),
        (1, 5, 4, current_timestamp, current_timestamp), (1, 4, 4, current_timestamp, current_timestamp),
        (2, 2, 1, current_timestamp, current_timestamp), (2, 4, 3, current_timestamp, current_timestamp);
+
+INSERT INTO game.chat (relationship_id, log, created_at, updated_at) VALUES (2, '{"users": [{"id": 3, "name": "Abracadabrus420"},
+{"id": 4, "name": "Conan"}], "log": []}', current_timestamp, current_timestamp);
+
+-- Insert new message in chat with id = 1
+UPDATE game.chat SET log = jsonb_set(
+  log::jsonb,
+  array['log'],
+  (log->'log')::jsonb || '{"timestamp": "2021-04-07 23:12:54.61542", "from": "Conan", "content": "Hello!"}'::jsonb)
+WHERE id = 1;
