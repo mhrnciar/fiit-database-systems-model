@@ -395,7 +395,8 @@ CREATE TABLE IF NOT EXISTS game.chat (
     updated_at TIMESTAMP NOT NULL,
     deleted_at TIMESTAMP,
     CONSTRAINT chat_check CHECK ((chat.relationship_id IS NOT NULL AND chat.team_id IS NULL)
-                                             OR (chat.team_id IS NOT NULL AND chat.relationship_id IS NULL))
+                                             OR (chat.team_id IS NOT NULL AND chat.relationship_id IS NULL)
+                                             OR (chat.team_id IS NULL AND chat.relationship_id IS NULL))
 );
 
 
