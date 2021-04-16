@@ -335,10 +335,11 @@ created_at TIMESTAMP NOT NULL,
 updated_at TIMESTAMP NOT NULL,
 deleted_at TIMESTAMP,
 CONSTRAINT chat_check CHECK ((chat.relationship_id IS NOT NULL AND chat.team_id IS NULL)
-                                             OR (chat.team_id IS NOT NULL AND chat.relationship_id IS NULL))
+                                             OR (chat.team_id IS NOT NULL AND chat.relationship_id IS NULL)
+					     OR (chat.team_id IS NULL AND chat.relationship_id IS NULL))
 ```
 
-Chat medzi dvoma hráčmi alebo v rámci tímu sa ukladá v tabuľke **chat**, pričom ak medzi danými hráčmi je záznam v **relationships** nastavený na ignored, nie je možné si písať, čo sa však rieši až na aplikačnej úrovni. Log komunikácie predstavuje JSON súbor, v ktorom sú uložené aj informácie o účastníkoch komunikácie v nasledovnom tvare:
+Chat medzi dvoma hráčmi alebo v rámci tímu sa ukladá v tabuľke **chat**, pričom ak medzi danými hráčmi je záznam v **relationships** nastavený na ignored, nie je možné si písať, čo sa však rieši až na aplikačnej úrovni. Keď neexistuje relationship medzi hráčmi, znamená to, že nie sú ani ignored a môžu si písať. Log komunikácie predstavuje JSON súbor, v ktorom sú uložené aj informácie o účastníkoch komunikácie v nasledovnom tvare:
 
 ```json
 {
